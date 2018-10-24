@@ -7,7 +7,6 @@
 //
 
 import UIKit
-import CoreData
 import RealmSwift
 
 @UIApplicationMain
@@ -19,9 +18,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
       
         do {
-        let realm = try Realm()
+        _ = try Realm()
         } catch {
-            print("Error initialozing Realm \(error)")
+            print("Error initializing Realm \(error)")
         }
         
         return true
