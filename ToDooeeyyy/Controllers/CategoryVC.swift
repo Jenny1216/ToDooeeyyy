@@ -8,18 +8,21 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
-class CategoryVC: UITableViewController {
+class CategoryVC: SwipeTableVC  {
     
     var categories : Results<Category>?
     
     let realm = try! Realm()
+    var toDoListVC = ToDoListVC()
     
    
     override func viewDidLoad() {
         super.viewDidLoad()
         
         loadCategory()
+        tableView.separatorStyle = .none
         
     }
     
@@ -31,11 +34,19 @@ class CategoryVC: UITableViewController {
       
     }
     
+
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+    
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
-        let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
+        if let category = categories?[indexPath.row] {
+            
+            cell.textLabel?.text = category.name 
         
-        cell.textLabel?.text = categories?[indexPath.row].name ?? "No categories entered"
+            guard let categoryColor = UIColor(hexString: category.colour) else {fatalError()}
+        cell.backgroundColor = categoryColor
+        cell.textLabel?.textColor = ContrastColorOf(categoryColor, returnFlat: true)
+        }
         
         return cell
     }
@@ -58,36 +69,8 @@ class CategoryVC: UITableViewController {
         }
     }
     
-    //MARK:- Add New Items
-
-    @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
-        
-        var textField = UITextField()
-        
-        let alert = UIAlertController.init(title: "Add New Category", message: "", preferredStyle: .alert)
-        
-        let action = UIAlertAction(title: "Add", style: .default, handler: { (action) in
-            
-            // what will happen when we press the add button
-            
-            let newCategory = Category()
-            newCategory.name = textField.text!
-            self.save(category: newCategory)
-          
-        })
-        
-        alert.addTextField { (alertTextField) in
-            
-            alertTextField.placeholder = "Create New Category"
-            textField = alertTextField
-        }
-        
-        alert.addAction(action)
-        
-        present(alert, animated: true, completion: nil)
-        
-        
-    }
+    
+    //MARK: - Data Manipulation Methods
     
     func save(category: Category){
         do {
@@ -109,4 +92,55 @@ class CategoryVC: UITableViewController {
         
         
     }
+    
+    //MARK: - Delete data from swipe
+    
+    override func updateModel(at indexPath: IndexPath) {
+        
+        if let categoryForDeletion = self.categories?[indexPath.row]{
+            do{
+                try self.realm.write {
+                    self.realm.delete(categoryForDeletion)
+                }
+            } catch {
+                print("error deleting category,\(error)")
+            }
+        }
+        
+    }
+    
+    //MARK:- Add New Items
+    
+    @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
+        
+        var textField = UITextField()
+        
+        let alert = UIAlertController.init(title: "Add New Category", message: "", preferredStyle: .alert)
+        
+        let action = UIAlertAction(title: "Add", style: .default, handler: { (action) in
+            
+            // what will happen when we press the add button
+            
+            let newCategory = Category()
+            newCategory.name = textField.text!
+            newCategory.colour = UIColor.randomFlat.hexValue()
+            self.save(category: newCategory)
+            
+        })
+        
+        alert.addTextField { (alertTextField) in
+            
+            alertTextField.placeholder = "Create New Category"
+            textField = alertTextField
+        }
+        
+        alert.addAction(action)
+        
+        present(alert, animated: true, completion: nil)
+        
+        
+    }
+    
+    
+    
 }
